@@ -65,7 +65,7 @@ class Trainer:
         for epoch in range(self.epochs):
             self.cur_epoch = epoch
             self.train(self)
-            if epoch%self.val_epoch or epoch+1==self.epochs:
+            if epoch%self.val_epoch==0 or epoch+1==self.epochs:
                 self.validate(self)
                 if self.val_metrics[self.metric].get_better():
                     new_best = self.create_name(self.val_metrics)
@@ -127,7 +127,7 @@ class Trainer:
                 with_flops = True
             )
         else:
-            return torch.profiler.profile()
+            return torch.profiler.profile(activities=None)
 
 
     def prepare_batch(self, batch):

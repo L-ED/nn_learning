@@ -1,92 +1,108 @@
 # base
+Quantization library for paradigma
+
+## Library structure
+    base
+    |
+    |_ experiment (High level): starts quantization experiment
+    |
+    |_ learning (Middle level): classes for model learning
+    |
+    |_ quantization (Middle level): classes for model quantizaton
+    |
+    |_ utils (Low level): model, dataloaders, optimizers and etc. creator
 
 
+### Experiment
 
-## Getting started
+    experiments
+    |
+    |_ configs: folder for experiment configuration files in yaml format
+    |
+    |_ experiment.py: Experiment class for quantization control
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+###  Learning
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+    learning
+    |
+    |_ classifier: Classification task trainer class
+    |
+    |_ metrics: Folder for metric functions and metric accumulator class
+    |
+    |_ trainer.py: Base class for task dependent trainers
+    |
+    |_ train.py: Task independent train function
+    |
+    |_ validate.py: Task independent validation function
 
-## Add your files
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+### Quantization
 
-```
-cd existing_repo
-git remote add origin http://10.24.65.46:999/paradigma/prod/quant/base.git
-git branch -M main
-git push -uf origin main
-```
+    quantzation
+    |
+    |_ quantizer.py: Task independent quantization class
+    |
+    |_ utils.py: Quantization utils and configs
 
-## Integrate with your tools
 
-- [ ] [Set up project integrations](http://10.24.65.46:999/paradigma/prod/quant/base/-/settings/integrations)
+## Config structure
 
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+    task: one of currently supported: clasification
+    metric: one of currently supported: [accuracy, iou]
+    distribute: whether to distribute model using DDP - True or False
+    debug: learn model by 1 epoch for debug cases
+    save_dir: /path/to/save_dir
+    model: 
+        name: one of [resnet, mobilenet, ofa] 
+        version: if resnet - one of ['18', '50', etc.], for mobilenet - one of ['1', '2', '3_large', etc.], for ofa - one of ['resnet', 'mobilenet']
+        source: pytorch
+        resume: /storage_labs/3030/LyginE/projects/paradigma/experiments/framework_tests/newrun/2022_11_11/20_20_27/train
+    dataset:
+        annotation: /storage_labs/db/face_masks/dataset_mask_face_640_480.csv
+        train_transform: 
+            - totensor
+            - randomrotation: 
+                - [-5, 5]
+            - randomresizedcrop:
+                - 224
+                - [0.8, 1.0]
+            - randomhorizontalflip
+            - randomverticalflip
+            - normalize: 
+                - mean: [0.485, 0.456, 0.406]
+                - std: [0.229, 0.224, 0.225]
+        val_transform:
+            - totensor
+            - resize: 256
+            - centercrop: 224
+            - normalize: 
+                - mean: [0.485, 0.456, 0.406]
+                - std: [0.229, 0.224, 0.225]
+    loader:
+        workers: 8
+        shuffle: True
+        drop_last: True
+        batch_size: 64
+    experiments:  
+        train:
+            timing: True
+            train_function:
+                path: /storage_labs/3030/LyginE/projects/paradigma/quant_framework_new/learning/train.py
+                name: train_
+            val_function:
+                path: /storage_labs/3030/LyginE/projects/paradigma/quant_framework_new/learning/validate.py
+                name: validate_
+            optimizer: 
+                name: Adam
+                parameters: 
+                    lr: 0.5
+            scheduler: 
+                name: reducelronplateau
+                parameters: 
+                    factor: 0.5
+                    patirnce: 10
+                    threshold: 0.001
+            loss :
+                name: crossentropyloss
+            epochs: 20
+            val_epoch: 2 

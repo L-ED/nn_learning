@@ -32,7 +32,7 @@ class Creator:
                 cpu_devices = device_list
                 logger(f"cpu devices: {cpu_devices}")
 
-        return cpu_devices, cuda_devices
+        return cuda_devices, cpu_devices
         
 
     def create_transform(self, transforms, logger):

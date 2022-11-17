@@ -5,7 +5,7 @@ distribute: False
 debug: True
 save_dir: /storage_labs/3030/LyginE/projects/paradigma/experiments/framework_tests/newrun
 device:
-    cuda: [1]
+    cuda: [3]
 model: 
     name: resnet 
     version: '18'
@@ -39,10 +39,10 @@ loader:
 experiments:  
     quantize:    
         train_function:
-            path: /storage_labs/3030/LyginE/projects/paradigma/quant_framework_new/base/learning/train.py
+            path: /storage_labs/3030/LyginE/projects/paradigma/quant_framework_new/learning/train.py
             name: train_
         val_function:
-            path: /storage_labs/3030/LyginE/projects/paradigma/quant_framework_new/base/learning/validate.py
+            path: /storage_labs/3030/LyginE/projects/paradigma/quant_framework_new/learning/validate.py
             name: validate_
         optimizer: 
             name: Adam
@@ -58,8 +58,8 @@ experiments:
                 threshold: 0.001
         mode: qat
         engine: qnnpack
-        epochs: 100
-        val_epoch: 5      
+        epochs: 10
+        val_epoch: 2      
 
 
 log:

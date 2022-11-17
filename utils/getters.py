@@ -99,11 +99,14 @@ def get_torch_model(name, version):
         return torch.hub.load(
             'pytorch/vision:v0.10.0', 
             name+version, 
+            pretrained=True
         )
     if name == "mobilenet":
         return torch.hub.load(
             'pytorch/vision:v0.10.0', 
-            name + "_" + version)
+            name + "_" + version,
+            pretrained = True
+        )
 
     
 def get_dataset_creator():
