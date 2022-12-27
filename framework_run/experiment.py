@@ -50,7 +50,7 @@ class Experiment_One_Model(Creator):
         if self.distribute:
             return int(os.environ["LOCAL_RANK"])
         else:
-            return None
+            return 0
 
 
     def create_dataloaders(self):
@@ -70,6 +70,8 @@ class Experiment_One_Model(Creator):
 
         trainloader = self.create_loader(
             trainset, trainloader_conf)
+
+        valloader_conf['shuffle']=False
         valloader = self.create_loader(
             valset, valloader_conf)
         return trainloader, valloader
@@ -245,7 +247,10 @@ class Experimentator(Creator):
     def __init__(self, path_to_config):
 
         self.config = dict_from_yaml(path_to_config)
-        self.save_dir = self.create_dir()
+        self.local_rank = self.take_local_rank()
+        print(self.local_rank)
+        if self.local_rank == 0:
+            self.save_dir = self.create_dir()
         self.logger = self.create_logger(self.save_dir)
         self.experimets_configs = self.config["experiments"].copy()
 
@@ -255,20 +260,23 @@ class Experimentator(Creator):
         prev_exp_name = None
         for experiment_name, experiment_config in self.experimets_configs.items():
 
-            self.logger.info(f"Initializing experiment {experiment_name}")
+            if self.local_rank == 0:
+                self.logger.info(f"Initializing experiment {experiment_name}")
 
             experiment = self.initialize_experiment(
                 experiment_name, experiment_config, prev_exp_name)
 
             if experiment.distribute:
-                self.logger.info("Initializing DDP")
+                if self.local_rank ==0:
+                    self.logger.info("Initializing DDP")
                 self.initialize_process()
             
-            self.logger.info("Starting experiment")
+            if self.local_rank == 0:
+                self.logger.info("Starting experiment")
             experiment()
 
             if experiment.distribute:
-                if experiment.local_rank == 0:
+                if self.local_rank == 0:
                     self.logger.info("Destroying DDP")
                 self.destroy_process()
 
@@ -319,3 +327,10 @@ class Experimentator(Creator):
 
     def destroy_process(self):
         torch.distributed.destroy_process_group()
+
+    
+    def take_local_rank(self):
+        if self.config["distribute"]:
+            return int(os.environ['LOCAL_RANK'])
+        else:
+            return 0

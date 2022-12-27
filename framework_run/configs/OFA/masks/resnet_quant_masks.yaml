@@ -1,0 +1,78 @@
+
+task: classification
+metric: accuracy
+distribute: False
+debug: False
+save_dir: /LyginE/projects/paradigma/experiments/framework_tests/newrun/resnet/masks
+device:
+    cuda: [0]
+model: 
+    name: resnet 
+    version: '18'
+    source: pytorch
+    classes: 4
+    resume: /LyginE/projects/paradigma/experiments/framework_tests/newrun/resnet/masks/train/0.9234_0.2977.pth
+dataset:
+    annotation: /db/face_masks/dataset_mask_face_640_480.csv
+    train_transform: 
+        - totensor
+        - randomrotation: 
+            - [-5, 5]
+        - randomresizedcrop:
+            - 224
+            - [0.8, 1.0]
+        - randomhorizontalflip
+        - randomverticalflip
+        - normalize: 
+            - mean: [0.485, 0.456, 0.406]
+            - std: [0.229, 0.224, 0.225]
+    val_transform:
+        - totensor
+        - resize: 256
+        - centercrop: 224
+        - normalize: 
+            - mean: [0.485, 0.456, 0.406]
+            - std: [0.229, 0.224, 0.225]
+loader:
+    workers: 8
+    shuffle: True
+    drop_last: True
+    batch_size: 32
+experiments:  
+    quantize:    
+        train_function:
+            path: /LyginE/projects/paradigma/quant_framework_new/learning/train.py
+            name: train_
+        val_function:
+            path: /LyginE/projects/paradigma/quant_framework_new/learning/validate.py
+            name: validate_
+        optimizer: 
+            name: Adam
+            parameters: 
+                lr: 0.5
+        loss :
+            name: crossentropyloss
+        scheduler: 
+            name: reducelronplateau
+            parameters: 
+                factor: 0.75
+                patience: 5
+                threshold: 0.001
+        mode: qat
+        engine: qnnpack
+        epochs: 20
+        val_epoch: 2      
+
+
+log:
+    level: info
+    name: 
+    output:
+        file:
+            out: default
+            messageformat: "%(asctime)s | %(levelname)s %(message)s"
+            dateformat: '%Y-%m-%d %H:%M:%S'
+        console:
+            out: default
+            messageformat: "%(asctime)s | %(levelname)s %(message)s"
+            dateformat: '%Y-%m-%d %H:%M:%S'     

@@ -1,0 +1,76 @@
+
+task: classification
+metric: accuracy
+distribute: False
+debug: False
+save_dir: /LyginE/projects/paradigma/experiments/framework_tests/newrun/mobilenet/tech
+device:
+    cuda: [0]
+model: 
+    name: mobilenet 
+    version: 'v2'
+    source: pytorch
+    classes: 5
+    # resume:
+dataset:
+    annotation: /db/paradigma/technic_five_class/dataset_planes_tanks_helicopters_rockets_ship_640_480/dataset_planes_tanks_helicopters_rockets_ship_640_480.csv
+    train_transform:
+        - totensor
+        - randomrotation: 
+            - [-5, 5]
+        - resize: 
+            - size: [224, 224]
+        - randomhorizontalflip
+        # - randomverticalflip
+        # - totensor
+        - normalize: 
+            - mean: [0.485, 0.456, 0.406]
+            - std: [0.229, 0.224, 0.225]
+    val_transform:
+        - totensor
+        - resize: 
+            - size: [224, 224]
+        # - centercrop: 224
+        - normalize: 
+            - mean: [0.485, 0.456, 0.406]
+            - std: [0.229, 0.224, 0.225]
+loader:
+    workers: 8
+    shuffle: True
+    drop_last: True
+    batch_size: 64
+experiments:  
+    train:
+        timing: True
+        train_function:
+            path: /LyginE/projects/paradigma/quant_framework_new/learning/train.py
+            name: train_
+        val_function:
+            path: /LyginE/projects/paradigma/quant_framework_new/learning/validate.py
+            name: validate_
+        optimizer: 
+            name: Adam
+            parameters: 
+                lr: 0.01
+        scheduler: 
+            name: reducelronplateau
+            parameters: 
+                factor: 0.5
+                patience: 10
+                threshold: 0.001
+        loss :
+            name: crossentropyloss
+        epochs: 50
+        val_epoch: 5 
+log:
+    level: info
+    name: 
+    output:
+        file:
+            out: default
+            messageformat: "%(asctime)s | %(levelname)s %(message)s"
+            dateformat: '%Y-%m-%d %H:%M:%S'
+        console:
+            out: default
+            messageformat: "%(asctime)s | %(levelname)s %(message)s"
+            dateformat: '%Y-%m-%d %H:%M:%S'     

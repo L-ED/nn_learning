@@ -3,33 +3,33 @@ task: classification
 metric: accuracy
 distribute: False
 debug: False
-save_dir: /storage_labs/3030/LyginE/projects/paradigma/experiments/framework_tests/newrun
+save_dir: /LyginE/projects/paradigma/experiments/framework_tests/newrun/ofa/chest
 device:
-    cuda: [0]
+    cuda: [1]
 model: 
-    name: resnet 
-    version: '18'
-    source: pytorch
-    # resume: /storage_labs/3030/LyginE/projects/paradigma/experiments/framework_tests/newrun/2022_11_11/20_20_27/train
+    name: ofa
+    version: resnet
+    source: /LyginE/projects/paradigma/New_ofa_nets/ofa_small.json
+    resume: /LyginE/projects/paradigma/experiments/framework_tests/newrun/ofa/chest/2022_12_12/19_31_0/train/0.925_0.2457.pth
+
 dataset:
-    annotation: /storage_labs/db/face_masks/dataset_mask_face_640_480.csv
-    train_transform:
+    annotation: /db/paradigma/chest_xray/dataset_chest_xray_640_480_balanced/data.csv
+    train_transform: 
         - totensor
         - randomrotation: 
             - [-5, 5]
-        - resize: 
-            - size: [224, 224]
+        - randomresizedcrop:
+            - 224
+            - [0.8, 1.0]
         - randomhorizontalflip
         # - randomverticalflip
-        # - totensor
         - normalize: 
             - mean: [0.485, 0.456, 0.406]
             - std: [0.229, 0.224, 0.225]
     val_transform:
         - totensor
-        - resize: 
-            - size: [224, 224]
-        # - centercrop: 224
+        - resize: 256
+        - centercrop: 224
         - normalize: 
             - mean: [0.485, 0.456, 0.406]
             - std: [0.229, 0.224, 0.225]
@@ -37,30 +37,33 @@ loader:
     workers: 8
     shuffle: True
     drop_last: True
-    batch_size: 64
+    batch_size: 32
 experiments:  
-    train:
-        timing: True
+    quantize:    
         train_function:
-            path: /storage_labs/3030/LyginE/projects/paradigma/quant_framework_new/learning/train.py
+            path: /LyginE/projects/paradigma/quant_framework_new/learning/train.py
             name: train_
         val_function:
-            path: /storage_labs/3030/LyginE/projects/paradigma/quant_framework_new/learning/validate.py
+            path: /LyginE/projects/paradigma/quant_framework_new/learning/validate.py
             name: validate_
         optimizer: 
             name: Adam
             parameters: 
-                lr: 0.01
+                lr: 0.0005
+        loss :
+            name: crossentropyloss
         scheduler: 
             name: reducelronplateau
             parameters: 
-                factor: 0.5
-                patience: 10
+                factor: 0.75
+                patience: 5
                 threshold: 0.001
-        loss :
-            name: crossentropyloss
-        epochs: 50
-        val_epoch: 5 
+        mode: qat
+        engine: qnnpack
+        epochs: 10
+        val_epoch: 2      
+
+
 log:
     level: info
     name: 

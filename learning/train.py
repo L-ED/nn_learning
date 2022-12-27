@@ -28,6 +28,7 @@ def train_(trainer):
                 )
             )
 
-        profiler.step()
+        if trainer.debug:
+            profiler.step()
 
     trainer.finalize_epoch("train")

@@ -24,7 +24,8 @@ class GenericDataset(Dataset):
 
         filepath, label = self.filefolder[index]
 
-        image = np.array(Image.open(filepath))
+        image = Image.open(filepath).convert('RGB')
+        image = np.array(image)
         image = self.transform(image)
 
         return image, label

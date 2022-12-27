@@ -3,7 +3,7 @@ task: classification
 metric: accuracy
 distribute: False
 debug: True
-save_dir: /storage_labs/3030/LyginE/projects/paradigma/experiments/framework_tests/newrun
+save_dir: /LyginE/projects/paradigma/experiments/framework_tests/newrun
 device:
     cuda: [2]
 model: 

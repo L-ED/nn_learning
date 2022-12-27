@@ -7,6 +7,9 @@ import torch.ao.quantization.quantize_fx as quantize_fx
 
 from .quantize import create_qconfig_mapping, get_qnnpack_backend_config
 
+# from .IVA_BAKCEND_CONFIG import get_qnnpack_TPU_backend_config as get_qnnpack_backend_config
+from .Qconfig_Mapping import create_qconfig_mapping_NEW as create_qconfig_mapping
+
 from ..learning import TRAINERS
 
 
@@ -50,7 +53,7 @@ def get_quantizer(
             self.calibration_input = torch.rand(
                 (1, *next(iter(self.trainloader))[0].shape[1:])
             )
-            print("SHAPE", self.calibration_input.shape)
+            # print("SHAPE", self.calibration_input.shape)
 
 
         def prepare(self, model):
@@ -72,10 +75,28 @@ def get_quantizer(
         def quantize(self):
             self.model = self.prepare(self.model)
             self.learn()
-            self.load_best_weights()
-            self.model = self.convert(
-                self.model.cpu())
-            self.save_quantized()
+            if self.local_rank == 0:
+                self.load_best_weights()
+
+                print("loaded weights")
+                self.validate(self)
+
+                self.model.eval()
+
+                print("evaluated")
+                self.validate(self)
+
+                self.model = self.convert(
+                    self.model.cpu())
+
+                print("converted")
+                self.device=torch.device('cpu')
+                self.validate(self)
+
+                self.save_quantized()
+
+                print("saved")
+                self.validate(self)
 
 
         def save_quantized(self):
@@ -105,6 +126,13 @@ def get_quantizer(
                 torch.load(best_path))
 
 
+        def check_out(self):
+            imgs, lbls = next(iter(self.valloader))
+            imgs = imgs.to(self.device)
+            self.model.to(self.device)
+            print("pred :", self.model(imgs))
+
+
 
     return Quantizer(
         trainer_kwargs= trainer_kwargs,
@@ -113,3 +141,8 @@ def get_quantizer(
         q_engine= q_engine,
         mode=mode
     )
+
+
+
+
+

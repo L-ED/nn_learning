@@ -1,10 +1,8 @@
 import torch, torchvision, os, sys, json
 from ..datasets import generic_set_one_annotation
-
 import yaml
-sys.path.insert(0, "/storage_labs/3030/LyginE/projects/paradigma/platform_converter/models")
 from platform_converter.models.models.networks.classification.ofa_mobilenetv3 import MobileNetVPlatComp
-from platform_converter.models.models.networks.classification.ofa_resnet import ResNets
+from platform_converter.models.models.networks.classification.ofa_resnet import ResNets #ResNetsQ
 
 
 def create_dict_from_module(module):
@@ -70,9 +68,9 @@ def get_transform(name):
     return get_(d, name)
     
     
-def get_model(name, version, source):
+def get_model(name, version, source, classes):
     if source.lower() in "pytorch":
-        return get_torch_model(name, version)
+        return get_torch_model(name, version, classes)
     else:
         if name.lower() == "ofa":
             return get_ofa_model(
@@ -87,26 +85,67 @@ def get_ofa_model(version, source):
         build_cfg = json.load(build_config_file)
 
     if version.lower() == "resnet":
-        return ResNets.build_from_config(build_cfg)
+        model =  ResNets.build_from_config(build_cfg)
     elif version.lower() == "mobilenet":
-        return MobileNetVPlatComp.build_from_config(build_cfg)
+        model = MobileNetVPlatComp.build_from_config(build_cfg)
+
+    model_trace = torch.fx.symbolic_trace(model)
+    def pattern(x):
+        return x.view(x.size(0), -1)
+    def replacement(x):
+        return torch.flatten(x, start_dim=1)
+
+    torch.fx.replace_pattern(model_trace, pattern, replacement)
+    model = model_trace
+
+    print(model.graph.print_tabular())
+
+    return model
 
     
-def get_torch_model(name, version):
+def get_torch_model(name, version, classes):
     name = name.lower()
     version = version.lower()
+    names=["resnet",'vgg']
     if name == "resnet":
-        return torch.hub.load(
+        model =  torch.hub.load(
             'pytorch/vision:v0.10.0', 
             name+version, 
             pretrained=True
         )
-    if name == "mobilenet":
-        return torch.hub.load(
+        if classes is not None:
+            in_f = model.fc.in_features
+            model.fc = torch.nn.Linear(in_f, classes) 
+        return model
+
+    elif name == 'vgg':
+        model =  torch.hub.load(
+            'pytorch/vision:v0.10.0', 
+            name+version, 
+            pretrained=True
+        )
+        model.avgpool = torch.nn.AdaptiveAvgPool2d((1,1))
+        if classes is not None:
+            old_fc = getattr(model.classifier, "0")
+            in_f = int(old_fc.in_features/49)
+            new_fc = torch.nn.Linear(in_f, classes)
+            delattr(model, "classifier")
+            setattr(model, "classifier", new_fc) 
+        return model
+
+    elif name == "mobilenet":
+        model = torch.hub.load(
             'pytorch/vision:v0.10.0', 
             name + "_" + version,
             pretrained = True
         )
+        if classes is not None:
+            idx = "1" if "2" in version else "3"
+            old_fc = getattr(model.classifier, idx)
+            in_f = old_fc.in_features
+            new_fc = torch.nn.Linear(in_f, classes)
+            setattr(model.classifier, idx, new_fc)
+        return model
 
     
 def get_dataset_creator():

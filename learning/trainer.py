@@ -8,21 +8,22 @@ from ..metrics import MetricHistoryNew, METRICS
 
 from torch.nn.parallel import DistributedDataParallel as DDP
 
+from contextlib import nullcontext
 
 class Trainer:
 
     def __init__(
-        self,
-        model, metric,
-        distribute, cuda_devices,
-        train_fn,val_fn,loss_fn,
-        trainloader,valloader,
-        optimizer,scheduler,
-        save_dir,
-        logger=None,
-        debug = False,
-        local_rank=None,
-        epochs=1,val_epoch=1):
+            self,
+            model, metric,
+            distribute, cuda_devices,
+            train_fn,val_fn,loss_fn,
+            trainloader,valloader,
+            optimizer,scheduler,
+            save_dir,
+            logger=None,
+            debug = False,
+            local_rank=None,
+            epochs=1,val_epoch=1):
 
         self.distribute = distribute
         self.metric = metric
@@ -40,16 +41,18 @@ class Trainer:
 
         self.best_name = ""
 
+        self.debug = debug
+
+        self.epochs = epochs
+        self.val_epoch = val_epoch
         if debug:
             self.epochs = 1
             self.val_epoch = 1
-        else:
-            self.epochs = epochs
-            self.val_epoch = val_epoch
         
         self.metric_calculator = METRICS[metric] # add later ability to make multiple metrics
 
         self.logger = self.prepare_logger(logger)
+        self.local_rank = local_rank
         self.model, self.device = self.prepare_model(
             model, 
             cuda_devices, 
@@ -62,10 +65,14 @@ class Trainer:
 
 
     def learn(self):
-        for epoch in range(self.epochs):
+        if self.distribute:
+            self.model = DDP(self.model, [self.device], output_device=self.device)
+
+        for epoch in range(1, self.epochs+1):
+
             self.cur_epoch = epoch
             self.train(self)
-            if epoch%self.val_epoch==0 or epoch+1==self.epochs:
+            if epoch%self.val_epoch==0 or epoch+1==self.epochs or epoch==1:
                 self.validate(self)
                 if self.val_metrics[self.metric].get_better():
                     new_best = self.create_name(self.val_metrics)
@@ -74,18 +81,21 @@ class Trainer:
 
     def prepare_model(self, model, cuda_devices, local_rank):
         if len(cuda_devices)>0:
-            if len(cuda_devices)>1:
-                if self.distribute: 
-                    assert local_rank is not None
+            if self.distribute: 
+                # assert local_rank is not None
+                if self.local_rank == 0:
                     self.logger("using Distributed Data Parallel")
-                    card_idx = cuda_devices[local_rank]
-                    device = torch.device("cuda", card_idx)
-                    torch.cuda.set_device(device)
-                    model = DDP(model, [card_idx])
+                
+                card_idx = cuda_devices[local_rank]
+                device = torch.device("cuda", card_idx)
+                torch.cuda.set_device(device)
+                # model = DDP(model, [card_idx])
             else:
                 card_idx = cuda_devices[0]
                 device = torch.device("cuda", card_idx)
-                model.to(device)
+                
+            model.to(device)
+        
         else:
             device = torch.device("cpu")
 
@@ -127,7 +137,7 @@ class Trainer:
                 with_flops = True
             )
         else:
-            return torch.profiler.profile(activities=None)
+            return nullcontext()
 
 
     def prepare_batch(self, batch):
@@ -163,15 +173,16 @@ class Trainer:
 
 
     def update_best(self, new_name):
-        if self.best_name != '':
-            old_best_path = os.path.join(self.save_dir, self.best_name)
-            os.remove(old_best_path)
+        if self.local_rank == 0:
+            if self.best_name != '':
+                old_best_path = os.path.join(self.save_dir, self.best_name)
+                os.remove(old_best_path)
 
-        new_best_path = os.path.join(self.save_dir, new_name)
-        model_state_dict = self.get_state_dict()
-        torch.save(model_state_dict, new_best_path)
+            new_best_path = os.path.join(self.save_dir, new_name)
+            model_state_dict = self.get_state_dict()
+            torch.save(model_state_dict, new_best_path)
 
-        self.best_name = new_name
+            self.best_name = new_name
 
     
     def get_state_dict(self):

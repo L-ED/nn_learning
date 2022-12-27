@@ -60,15 +60,20 @@ def conv_observer(module, x, out):
     op_s = module.scale
 
     module.iva_scale = w_s*x_s/op_s
+    module.bias_inv_scale = w_s*x_s
 
 
 def linear_observer(module, x, out):
     x_s = x[0].q_scale()
-    w_s = module.weight().q_scale()
     op_s = module.scale
-
+    w_s = module.weight().q_scale()
     module.iva_scale = torch.tensor(
         [w_s*x_s/op_s for i in range(out.shape[1])])
+    module.bias_inv_scale = torch.tensor(
+        [w_s*x_s for i in range(out.shape[1])])
+    # w_s = module.weight().q_per_channel_scales()
+    # module.iva_scale = w_s*x_s/op_s
+    # module.bias_inv_scale = w_s*x_s
 
 
 def wrap_model(model, observers_dict):
@@ -127,3 +132,6 @@ def convert_platform(model, input_featuremap, filepath_no_ext):
     jsonpath = filepath_no_ext + ".json"
     with open(jsonpath, "w") as jsonfile:
         json.dump(json_content, jsonfile)
+
+
+

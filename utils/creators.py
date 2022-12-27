@@ -1,4 +1,3 @@
-from asyncio.log import logger
 import sys, os, logging, copy
 
 from .getters import *
@@ -25,6 +24,7 @@ class Creator:
             if dev_type=="cuda":
                 cuda_devices = device_list
                 visible_devices_num = torch.cuda.device_count()
+                print("VISIBLE DEVICES", visible_devices_num)
                 assert visible_devices_num>len(cuda_devices)
                 logger(f"cuda devices: {cuda_devices}")
 
@@ -105,13 +105,17 @@ class Creator:
         model_name= model_dict['name']
         model_version= model_dict['version']
         model_source = model_dict["source"]
+        if 'classes' in model_dict:
+            classes = model_dict['classes']
+        else:
+            classes = None
         
         logger(
             f"Creating model {model_name} "+\
             f"version {model_version}")
         
         model = get_model(
-            model_name, model_version, model_source)
+            model_name, model_version, model_source, classes)
 
         if 'resume' in model_dict:
             self.resume_state(model, model_dict["resume"], logger)
