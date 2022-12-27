@@ -148,12 +148,17 @@ class Creator:
             logger(f'!!! Failed to load checkpoint {resume_path}')
 
 
-    def create_scheduler(self, scheduler_dict, optimizer):
-        # scheduler_dict = self.config['scheduler']
-        parameters_config = scheduler_dict["parameters"]
+    def convert_list_to_tuple(self, parameters_config):
         for name, parameter in parameters_config.items():
             if isinstance(parameter, list):
                 parameters_config[name] = tuple(parameter)
+        return parameters_config
+
+
+    def create_scheduler(self, scheduler_dict, optimizer):
+        parameters_config = self.convert_list_to_tuple(
+            scheduler_dict["parameters"]
+        )
         scheduler= get_scheduler(scheduler_dict['name'])(
             optimizer, **parameters_config
         )
@@ -162,11 +167,9 @@ class Creator:
 
 
     def create_optimizer(self, model, optimizer_dict, logger):
-        parameters_config = optimizer_dict["parameters"]
-        for name, parameter in parameters_config.items():
-            if isinstance(parameter, list):
-                parameters_config[name] = tuple(parameter)
-
+        parameters_config = self.convert_list_to_tuple(
+            optimizer_dict["parameters"])
+        
         optimizer= get_optimizer(optimizer_dict['name'])(
             model.parameters(), **parameters_config
         )

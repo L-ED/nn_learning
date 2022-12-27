@@ -106,3 +106,11 @@ Quantization library for paradigma
                 name: crossentropyloss
             epochs: 20
             val_epoch: 2 
+
+
+# TODO
+- [ ] Make one functionality for optimizer, loss, loader, scheduler through parameters field
+- [ ] Read all config keys through take_config with ability to specify config 
+- [ ] Check logger creator, maybe replace with default 
+- [ ] Add DDP
+
