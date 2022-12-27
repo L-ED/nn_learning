@@ -100,7 +100,7 @@ Quantization library for paradigma
                 name: reducelronplateau
                 parameters: 
                     factor: 0.5
-                    patirnce: 10
+                    patience: 10
                     threshold: 0.001
             loss :
                 name: crossentropyloss

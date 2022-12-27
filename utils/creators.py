@@ -167,8 +167,12 @@ class Creator:
 
 
     def create_optimizer(self, model, optimizer_dict, logger):
+        parameters_config = self.take_config(
+            'parameters',
+            optimizer_dict
+        )
         parameters_config = self.convert_list_to_tuple(
-            optimizer_dict["parameters"])
+            parameters_config)
         
         optimizer= get_optimizer(optimizer_dict['name'])(
             model.parameters(), **parameters_config
@@ -187,8 +191,16 @@ class Creator:
 
 
     def create_loss(self, loss_dict):
-        # loss_= self.config['loss']              
-        loss_fn = get_loss(loss_dict['name'])()
+        parameters_config = self.take_config(
+            'parameters',
+            loss_dict
+        )
+        parameters_config = self.convert_list_to_tuple(
+            parameters_config)
+                      
+        loss_fn = get_loss(loss_dict['name'])(
+            **parameters_config
+        )
         return loss_fn
 
 
@@ -272,14 +284,18 @@ class Creator:
         )
 
 
-    def take_config(self, key):
+    def take_config(self, key, config=None):
         try:
-            if key in self.exp_config.keys():
+            if config is None:
+                if key in self.exp_config.keys():
 
-                self.logger.info(f"using {key} config from experiment config")
-                return copy.deepcopy(self.exp_config[key])
+                    self.logger.info(f"using {key} config from experiment config")
+                    return copy.deepcopy(self.exp_config[key])
+                else:
+                    self.logger.info(f"using {key} config from global config")
+                    return copy.deepcopy(self.global_config[key])
             else:
-                self.logger.info(f"using {key} config from global config")
-                return copy.deepcopy(self.global_config[key])
+                return copy.deepcopy(config[key])
         except:
+            self.logger.warning(f"No key {} in config")
             return None
