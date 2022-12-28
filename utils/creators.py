@@ -147,7 +147,6 @@ class Creator:
             logger(
                 f"resume path {resume_path} is dir, choosing best"
             )
-            print("files in dir", os.listdir(resume_path))
             best_file = sorted(os.listdir(resume_path))[0]
             resume_path = os.path.join(resume_path, best_file)
             logger(f"best is {best_file}")
@@ -224,51 +223,27 @@ class Creator:
 
     def create_logger(self, save_dir):
 
-
-        try:
-            log_config = self.config['log']
-            logger_name = log_config['name']
-        except:
-            logger_name = 'learning_process'
-
-        try:
-            logger_level = log_config['level'].lower()
-            if logger_level == 'info':
-                logger_level = logging.INFO
-            elif logger_level == 'warning':
-                logger_level = logging.WARNING
-            elif logger_level == 'error':
-                logger_level = logging.ERROR
-            else:
-                logger_level = logging.DEBUG
-            
-        except:
-            logger_level = logging.INFO
+        logger_name = 'quantization_process'
+        logger_level = logging.INFO
             
         logger = logging.getLogger(logger_name)
         logger.setLevel(logger_level)
         
-        for handler_type, handler_config in log_config['output'].items():
-            
-            handler_type = handler_type.lower()
-            path =  handler_config["out"]
-            
-            if handler_type == 'file':
-                if path == 'default':
-                    path = os.path.join(save_dir, 'experiment.log')
-                log_h = logging.FileHandler(filename=path, mode='w')
-            elif handler_type == 'console':
-                log_h = logging.StreamHandler(sys.stdout)
+        path = os.path.join(save_dir, 'experiment.log')
+        log_file = logging.FileHandler(filename=path, mode='w')    
+        log_console = logging.StreamHandler(sys.stdout)
                 
-            log_h.setLevel(logger_level)
-            try:
-                formatter = logging.Formatter(fmt=handler_config['messageformat'], 
-                                            datefmt=handler_config['dateformat'])
-            except:
-                formatter = logging.Formatter(fmt='%(asctime)s | %(levelname)s \n%(message)s\n', 
+        log_file.setLevel(logger_level)
+        log_console.setLevel(logger_level)
+        
+        formatter = logging.Formatter(fmt='%(asctime)s | %(levelname)s \n%(message)s\n', 
                                             datefmt='%Y-%m-%d %H:%M:%S')
-            log_h.setFormatter(formatter)
-            logger.addHandler(log_h)
+        log_file.setFormatter(formatter)
+        log_console.setFormatter(formatter)
+
+        logger.addHandler(log_file)
+        logger.addHandler(log_console)
+
         return logger
 
 
