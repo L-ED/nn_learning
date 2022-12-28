@@ -98,28 +98,25 @@ class Creator:
         return  trainset, valset
 
 
-    def create_loader(self, dataset, loader_dict):
-        parameters_config = self.take_config(
-            'parameters',
-            loader_dict
-        )
-        parameters_config = self.convert_list_to_tuple(
-            parameters_config)
+    def create_loader(self, dataset, loader_config):
+        
+        loader_config = self.convert_list_to_tuple(
+            loader_config)
 
         dataloader= torch.utils.data.DataLoader(
             dataset,
-            **parameters_config
+            **loader_config
         )
         return dataloader
 
 
-    def create_model(self, model_dict, logger):
-        model_name= model_dict['name']
-        model_version= model_dict['version']
-        model_source = model_dict["source"]
+    def create_model(self, model_config, logger):
+        model_name= model_config['name']
+        model_version= model_config['version']
+        model_source = model_config["source"]
         parameters_config = self.take_config(
             'parameters',
-            model_dict
+            model_config
         )
         parameters_config = self.convert_list_to_tuple(
             parameters_config)
@@ -134,8 +131,8 @@ class Creator:
             model_source, 
             **parameters_config)
 
-        if 'resume' in model_dict:
-            self.resume_state(model, model_dict["resume"], logger)
+        if 'resume' in model_config:
+            self.resume_state(model, model_config["resume"], logger)
 
         return model
 
@@ -172,38 +169,38 @@ class Creator:
         return parameters_config
 
 
-    def create_scheduler(self, scheduler_dict, optimizer):
+    def create_scheduler(self, scheduler_config, optimizer):
         parameters_config = self.take_config(
             'parameters',
-            scheduler_dict
+            scheduler_config
         )
         parameters_config = self.convert_list_to_tuple(
-            scheduler_dict["parameters"]
+            scheduler_config["parameters"]
         )
-        scheduler= get_scheduler(scheduler_dict['name'])(
+        scheduler= get_scheduler(scheduler_config['name'])(
             optimizer, **parameters_config
         )
             
         return scheduler
 
 
-    def create_optimizer(self, model, optimizer_dict, logger):
+    def create_optimizer(self, model, optimizer_config, logger):
         parameters_config = self.take_config(
             'parameters',
-            optimizer_dict
+            optimizer_config
         )
         parameters_config = self.convert_list_to_tuple(
             parameters_config)
         
-        optimizer= get_optimizer(optimizer_dict['name'])(
+        optimizer= get_optimizer(optimizer_config['name'])(
             model.parameters(), **parameters_config
         )
 
-        if 'resume' in optimizer_dict:
-            resume_path = optimizer_dict['resume']
+        if 'resume' in optimizer_config:
+            resume_path = optimizer_config['resume']
             self.resume_state(optimizer, resume_path, logger,'optimizer_state')
 
-        scheduler_config = self.take_config('scheduler', optimizer_dict)
+        scheduler_config = self.take_config('scheduler', optimizer_config)
         if scheduler_config is not None:
             scheduler= self.create_scheduler(
                 scheduler_config, optimizer)
@@ -211,15 +208,15 @@ class Creator:
         return optimizer, scheduler
 
 
-    def create_loss(self, loss_dict):
+    def create_loss(self, loss_config):
         parameters_config = self.take_config(
             'parameters',
-            loss_dict
+            loss_config
         )
         parameters_config = self.convert_list_to_tuple(
             parameters_config)
                       
-        loss_fn = get_loss(loss_dict['name'])(
+        loss_fn = get_loss(loss_config['name'])(
             **parameters_config
         )
         return loss_fn
