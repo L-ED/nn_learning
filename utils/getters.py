@@ -68,16 +68,15 @@ def get_transform(name):
     return get_(d, name)
     
     
-def get_model(name, version, source, classes):
+def get_model(name, source, **additional_params):
     if source.lower() in "pytorch":
-        return get_torch_model(name, version, classes)
+        return get_torch_model(name, **additional_params)
     else:
         if name.lower() == "ofa":
-            return get_ofa_model(
-                version, source)
+            return get_ofa_model(name, **additional_params)
         else:
             return get_object(
-                source, name, version)
+                source, name)
     
 
 def get_ofa_model(version, source):
@@ -85,7 +84,7 @@ def get_ofa_model(version, source):
         build_cfg = json.load(build_config_file)
 
     if version.lower() == "resnet":
-        model =  ResNets.build_from_config(build_cfg)
+        model = ResNets.build_from_config(build_cfg)
     elif version.lower() == "mobilenet":
         model = MobileNetVPlatComp.build_from_config(build_cfg)
 

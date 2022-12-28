@@ -112,8 +112,6 @@ class Creator:
 
     def create_model(self, model_config, logger):
         model_name= model_config['name']
-        model_version= model_config['version']
-        model_source = model_config["source"]
         parameters_config = self.take_config(
             'parameters',
             model_config
@@ -121,14 +119,10 @@ class Creator:
         parameters_config = self.convert_list_to_tuple(
             parameters_config)
 
-        logger(
-            f"Creating model {model_name} "+\
-            f"version {model_version}")
+        logger(f"Creating model {model_name}")
         
         model = get_model(
-            model_name, 
-            model_version, 
-            model_source, 
+            model_name,
             **parameters_config)
 
         if 'resume' in model_config:
