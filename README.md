@@ -113,5 +113,7 @@ Quantization library for paradigma
 - [x] Read all config keys through take_config with ability to specify config 
 - [x] Check logger creator, maybe replace with default
 - [ ] Change model creator behaviour for ability to work with different task
+- [ ] Make model creator accept parameters kwargs
+- [ ] Change config structure to parametrised model, loss  
 - [ ] Add DDP
 
