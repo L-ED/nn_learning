@@ -64,16 +64,30 @@ class Creator:
         return t_list
 
 
-    def create_dataset(self, data_dict, logger):
+    def create_dataset(self, data_config, logger):
         transforms_dict = {}
         for mode in ["train", "val"]:
-            transforms_dict[mode]= torchvision.transforms.Compose(
-                self.create_transform(
-                    data_dict[f"{mode}_transform"],
-                    logger
-            ))
-        annotations_root= data_dict['annotation']
+            transform_config = self.take_config(
+                f"{mode}_transform",
+                data_config
+            )
+            if transform_config is None:
+                transforms_dict[mode]=None    
+            else:
+                transforms_dict[mode]= torchvision.transforms.Compose(
+                    self.create_transform(
+                        transform_config,
+                        logger
+                        )
+                    )
+
+        annotations_root= self.take_config(
+            'annotation', 
+            data_config
+        )
+
         dataset_creator = get_dataset_creator()
+        
         logger(
             "Creating Dataset "+\
             f"from annotations {annotations_root}")
@@ -85,37 +99,40 @@ class Creator:
 
 
     def create_loader(self, dataset, loader_dict):
-        workers= loader_dict['workers']
-        shuffle= loader_dict['shuffle']
-        drop_last= loader_dict['drop_last']
-        batch= loader_dict[f'batch_size']
+        parameters_config = self.take_config(
+            'parameters',
+            loader_dict
+        )
+        parameters_config = self.convert_list_to_tuple(
+            parameters_config)
 
         dataloader= torch.utils.data.DataLoader(
             dataset,
-            batch_size= batch, 
-            shuffle=shuffle, 
-            num_workers=workers, 
-            drop_last=drop_last
+            **parameters_config
         )
         return dataloader
 
 
     def create_model(self, model_dict, logger):
-        # model_dict = self.config['model']
         model_name= model_dict['name']
         model_version= model_dict['version']
         model_source = model_dict["source"]
-        if 'classes' in model_dict:
-            classes = model_dict['classes']
-        else:
-            classes = None
-        
+        parameters_config = self.take_config(
+            'parameters',
+            model_dict
+        )
+        parameters_config = self.convert_list_to_tuple(
+            parameters_config)
+
         logger(
             f"Creating model {model_name} "+\
             f"version {model_version}")
         
         model = get_model(
-            model_name, model_version, model_source, classes)
+            model_name, 
+            model_version, 
+            model_source, 
+            **parameters_config)
 
         if 'resume' in model_dict:
             self.resume_state(model, model_dict["resume"], logger)
@@ -156,6 +173,10 @@ class Creator:
 
 
     def create_scheduler(self, scheduler_dict, optimizer):
+        parameters_config = self.take_config(
+            'parameters',
+            scheduler_dict
+        )
         parameters_config = self.convert_list_to_tuple(
             scheduler_dict["parameters"]
         )
@@ -182,10 +203,10 @@ class Creator:
             resume_path = optimizer_dict['resume']
             self.resume_state(optimizer, resume_path, logger,'optimizer_state')
 
-        scheduler = None
-        if 'scheduler' in optimizer_dict.keys():
+        scheduler_config = self.take_config('scheduler', optimizer_dict)
+        if scheduler_config is not None:
             scheduler= self.create_scheduler(
-                optimizer_dict["scheduler"], optimizer)
+                scheduler_config, optimizer)
 
         return optimizer, scheduler
 
@@ -297,5 +318,5 @@ class Creator:
             else:
                 return copy.deepcopy(config[key])
         except:
-            self.logger.warning(f"No key {} in config")
+            self.logger.warning(f"No key {key} in config")
             return None
