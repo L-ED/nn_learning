@@ -98,8 +98,6 @@ def get_ofa_model(version, source):
     torch.fx.replace_pattern(model_trace, pattern, replacement)
     model = model_trace
 
-    print(model.graph.print_tabular())
-
     return model
 
     
@@ -154,7 +152,6 @@ def get_dataset_creator():
 
 def get_object(source, name, version=None):
 
-    print(source)
     mod = create_module_from_source(source)
     d = create_dict_from_module(mod)
 

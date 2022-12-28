@@ -109,8 +109,9 @@ Quantization library for paradigma
 
 
 # TODO
-- [ ] Make one functionality for optimizer, loss, loader, scheduler through parameters field
-- [ ] Read all config keys through take_config with ability to specify config 
-- [ ] Check logger creator, maybe replace with default 
+- [x] Make one functionality for optimizer, loss, loader, scheduler through parameters field
+- [x] Read all config keys through take_config with ability to specify config 
+- [x] Check logger creator, maybe replace with default
+- [ ] Change model creator behaviour for ability to work with different task
 - [ ] Add DDP
 
