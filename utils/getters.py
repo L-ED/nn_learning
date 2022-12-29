@@ -98,14 +98,17 @@ def get_nnl_model(name, **postprocessing_params):
     return MODELS[name](**postprocessing_params)
 
     
-def get_torch_model(name, **postprocessing_params):
+def get_torch_model(name, pretrained, **postprocessing_params):
     name = name.lower()
-    
-    models_dict = create_dict_from_module(
-        torchvision.models)
-    model = get_(
-        models_dict, name)
-    
+
+    weights = None
+    if pretrained:
+        weights= torchvision.models.get_model_weights(name=name)
+
+    model = torchvision.models.get_model(
+        name= name,
+        weights= weights)
+
     model = MODEL_POSTRPOCESSORS[name](
         model, **postprocessing_params)
     
