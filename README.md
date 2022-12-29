@@ -117,5 +117,7 @@ Quantization library for paradigma
 - [ ] Change config structure to parametrised model, loss
 - [ ] Make model creator load model from torchvision.models using dict from module
 - [ ] Add model preparatos for every model in models directory 
+- [ ] Check whether new segmentation trainer is needed and create 
+- [ ] Change experimentator behaviour so that it will create dir and start torchrun 
 - [ ] Add DDP
 

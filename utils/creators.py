@@ -86,10 +86,11 @@ class Creator:
             data_config
         )
 
-        dataset_creator = get_dataset_creator()
+        task = self.take_config("task")
+        dataset_creator = get_dataset_creator(task)
         
         logger(
-            "Creating Dataset "+\
+            f"Creating Dataset for {task} task"+\
             f"from annotations {annotations_root}")
         trainset, valset= dataset_creator( 
             annotation_path= annotations_root,
@@ -120,7 +121,10 @@ class Creator:
             parameters_config)
 
         logger(f"Creating model {model_name}")
-        
+
+        task = self.take_config("task")
+        parameters_config["task"]=task
+
         model = get_model(
             model_name,
             **parameters_config)
